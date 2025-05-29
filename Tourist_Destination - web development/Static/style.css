@@ -1,0 +1,117 @@
+/* General Styles */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 20px 0;
+    text-align: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2em;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    background-color: #444;
+}
+
+nav ul li {
+    margin: 0 15px;
+}
+
+nav ul li a {
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 15px;
+    display: block;
+}
+
+nav ul li a:hover {
+    background-color: #666;
+}
+
+/* Footer Styles */
+footer {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 15px 0;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+/* First Page Styles - Light Pink Background with Italic Mixed Color Text */
+body.homepage {
+    background-color: #ffe6e6;
+}
+
+body.homepage h2, body.homepage p {
+    font-style: italic;
+    color: #333;
+}
+
+/* Mixed color effect on text for homepage */
+body.homepage p {
+    color: #d85b5b; /* Example color for text */
+}
+
+/* Second Page Styles - Light Blue Background with Bold Font */
+body.business-page {
+    background-color: #e6f2ff;
+}
+
+body.business-page h2, body.business-page p {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Third Page Styles - Light Green Background with Italic Bold Font */
+body.environment-page {
+    background-color: #e6ffe6;
+}
+
+body.environment-page h2, body.environment-page p {
+    font-style: italic;
+    font-weight: bold;
+    color: #333;
+}
+
+/* General Section Styles */
+section {
+    padding: 20px;
+    margin: 10px 15%;
+}
+
+section img {
+    max-width: 100%;
+    height: auto;
+    margin-top: 10px;
+}
+
+/* Styles for .destinations class in homepage */
+.destinations {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.destination {
+    width: 48%;
+    margin-bottom: 20px;
+}
+
+.destination img {
+    width: 100%;
+    border-radius: 5px;
+}
