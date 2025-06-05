@@ -1,0 +1,12 @@
+SELECT [Commission YTD] = [SalesYTD] * [CommissionPct]
+      ,[Income YTD] = [SalesYTD]  * [CommissionPct] + [Bonus]
+	  ,[SalesQuota]
+      ,[Bonus]
+      ,[CommissionPct]
+      ,[SalesYTD]
+	  ,[Bonus Fairness] = ([Bonus] / [SalesYTD]) * 100
+      ,[SalesLastYear]
+	  ,[Difference] = [SalesYTD] - [SalesLastYear]
+      ,[rowguid]
+      ,[ModifiedDate]
+  FROM [AdventureWorks2019].[Sales].[SalesPerson]

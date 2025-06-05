@@ -1,0 +1,11 @@
+--select GETDATE()
+
+--select datefromparts(2013,1,1)
+
+SELECT YEAR(GETDATE())
+SELECT MONTH(GETDATE())
+SELECT DAY(GETDATE())
+
+--SELECT DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), DAY(GETDATE())) -- display current date
+
+SELECT DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1) --Give First date of month
