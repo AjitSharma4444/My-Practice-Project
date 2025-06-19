@@ -1,0 +1,1 @@
+SELECT AVG([TaxAmt] + [Freight]) FROM [Sales].[SalesOrderHeader]
