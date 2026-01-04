@@ -18,7 +18,7 @@ This repository is a collection of my projects and practice materials focused on
 * **Useful Queries**: A collection of high-efficiency SQL snippets for daily tasks.
 * **Interview Prep**: `Interview_preparation_project.sql` containing solutions to common technical assessment questions.
 
-### 🌐 Other Projects
+### 🌐 Other Projects - under development
 * **[Tourist Destination](./Tourist_Destination%20-%20web%20development)**: A web development project showcasing front-end/back-end integration.
 
 ---
@@ -34,4 +34,4 @@ This repository is a collection of my projects and practice materials focused on
 3. For Python automation, check the root `.py` files for executable scripts.
 
 ---
-**Contact:** [Your Name] | [Your LinkedIn Link]
+**Contact:** [Ajit Sharma] | [ajitssharma]
