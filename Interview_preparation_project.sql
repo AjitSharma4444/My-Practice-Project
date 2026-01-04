@@ -1,3 +1,12 @@
+-- Find column data type for all tables in a active schema
+SELECT 
+    TABLE_NAME,
+    COLUMN_NAME,
+    DATA_TYPE,
+    SUM(CASE WHEN IS_NULLABLE = 'NO' THEN 1 ELSE 0 END) OVER(PARTITION BY TABLE_NAME) AS non_null_columns_count
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'northwind'
+ORDER BY TABLE_NAME, ORDINAL_POSITION;
 
 -- Basic Query: -
 -- Q 1. What SQL query would you write to select the 2nd highest salary in the manufacturing department?
@@ -164,20 +173,21 @@ GROUP BY YEAR(payment_date)
 ORDER BY Years;
 
 -- Q 9. How would you count the number of daily active users by platform for the year 2020?
-USE Social_Media_Users;
-SELECT 
-    owner_name,
-    ROUND(SUM(Daily_Time_Spent_in_Min) / 365, 0) Daily_active_hours,
-    (Number_of_monthly_in_million * 12) AS active_users_for_year
-FROM
-    social_media_users
-        JOIN
-    monthly_active_users ON monthly_active_users.platform = social_media_users.platform
-GROUP BY owner_name
-ORDER BY Daily_active_hours DESC;
+USE social_media_users;
+SELECT
+    device_os AS Platform,
+    COUNT(DISTINCT user_id) AS Daily_active_users,
+    DATE((DATE_FORMAT(timestamp, '%d-%m-%y'))) AS Dates
+FROM user_app_interaction_data
+WHERE YEAR((DATE_FORMAT(timestamp, '%d-%m-%y'))) = 2020
+GROUP BY
+    device_os,
+    DATE((DATE_FORMAT(timestamp, '%d-%m-%y')))
+ORDER BY
+    DATE((DATE_FORMAT(timestamp, '%d-%m-%y')));
+
 
 -- Q 11. What SQL query would return the total distance traveled by each user, in descending order?
-
 USE uber_dataset;
 SELECT 
     customer_id, SUM(ride_distance) Total_distance_travelled
@@ -257,6 +267,13 @@ FROM
 GROUP BY Customer_ID , Purchase_Type , Category, YEAR(purchase_date)
 ORDER BY Customer_ID ASC , Purchase_Type , Category , YEAR(purchase_date) ASC, Total_Transactions asc;
 
+-- Q 28. What query would select all entries from the flights table?
+USE airline_dataset;
+SELECT 
+    *
+FROM
+    flights;
+
 -- Q 32. What query would return all rides longer than two hours, sorted by duration?
 USE uber_dataset;
 SELECT 
@@ -292,7 +309,7 @@ ORDER BY SUM(Purchase_Amount_USD) DESC;
 
 -- Q 39. Which products have a product price strictly greater than their own average transaction total?
 
-use sales_data;
+USE sales_data;
 SELECT 
     Item_Purchased,
     MAX(Purchase_amount_usd),
@@ -342,7 +359,8 @@ GROUP BY branch , year;
 
 -- Q 55. What is the cumulative sales per product over time, sorted by product_id and date?
 USE sales_data;
-SELECT order_date, Product_name, Sales, SUM(Sales) OVER (PARTITION BY Product_Name ORDER BY Order_Date) AS Cummulative_Sales
+SELECT order_date, Product_name, Sales, 
+SUM(Sales) OVER (PARTITION BY Product_Name ORDER BY Order_Date) AS Cummulative_Sales
 FROM sales_data
 ORDER BY Product_Name, Order_Date;
 
@@ -387,6 +405,35 @@ employees.manager_id = Manager_table.manager_id)
 select *, GREATEST( join_date, hire_date) as Old_hired_date_employee_or_Manager from cte 
 WHERE GREATEST( join_date, hire_date) = hire_date;
 
+-- Q 67. How many unpurchased seats exist per flight, given flights, planes, and flight_purchases tables?
+WITH AircraftCapacity AS (
+    -- Calculate capacity once per aircraft type
+    SELECT aircraft_code, COUNT(*) AS total_seats
+    FROM seats
+    GROUP BY aircraft_code
+)
+SELECT 
+    f.flight_id,
+    f.flight_no,
+    ac.total_seats AS total_capacity,
+    COUNT(tf.ticket_no) AS seats_purchased,
+    (ac.total_seats - COUNT(tf.ticket_no)) AS unpurchased_seats
+FROM flights f
+JOIN AircraftCapacity ac ON f.aircraft_code = ac.aircraft_code
+LEFT JOIN ticket_flights tf ON f.flight_id = tf.flight_id
+GROUP BY f.flight_id, f.flight_no, ac.total_seats;
+
+-- Q 69. What are the total regular salaries, overtime pay, and compensations by role?
+USE employment_details;
+SELECT 
+    Job, 
+    round(SUM(salaries),2) AS Total_Regular_Salaries, 
+    round(SUM(overtime),2) AS Total_Overtime_Pay,
+    round(SUM(salaries + retirement + health_and_dental + other_benefits),2) AS Total_Compensation
+FROM employee_salary_compensation
+GROUP BY job
+ORDER BY total_compensation DESC;
+
 -- Q 79. How much of each product was sold per month, with products as columns?
 USE sales_data;
 SELECT 
@@ -399,8 +446,126 @@ FROM
 GROUP BY category , MONTH(order_date) , YEAR(order_date)
 ORDER BY MONTH(order_date) , YEAR(order_date);
 
--- Q 84. What percentage of total revenue to date was made in the first and last years?
+-- Q 78. How many users, transactions, and total order value occurred per month in 2023?
 
+SELECT 
+    DISTINCT COUNT(DISTINCT customer_id) AS Total_users, 
+    ROUND(SUM(order_total), 2) AS Sum_Total, 
+    COUNT(order_id) AS Count_of_orders, 
+    MONTH(order_date) AS Month_index, 
+    MONTHNAME(order_date) AS Month_name, 
+    YEAR(order_date) AS Year_2023
+FROM blinkit.blinkit_orders
+WHERE YEAR(order_date) = 2023
+GROUP BY 
+    YEAR(order_date), 
+    MONTH(order_date), 
+    MONTHNAME(order_date)
+ORDER BY 
+    YEAR(order_date), 
+    MONTH(order_date);
+    
+-- Q 87. How can you randomly sample a row from a table with over 100 million rows?
+USE pizzahut;
+-- Step 1: Query for 10 random rows (first add random_weight column)
+	-- ALTER TABLE orders 
+	-- ADD COLUMN random_weight FLOAT AFTER order_id,
+	-- ADD INDEX (random_weight);
+	-- SET SQL_SAFE_UPDATES = 0;
+	-- UPDATE orders SET random_weight = RAND();
+SELECT * FROM orders
+WHERE random_weight >= RAND()
+ORDER BY random_weight ASC
+LIMIT 10;
+-- Step 2: Query for 10 random rows
+SELECT t.*
+FROM orders AS t
+JOIN (SELECT ROUND(RAND() * (SELECT MAX(order_id) FROM orders)) AS order_id) AS temp
+WHERE t.order_id >= temp.order_id
+ORDER BY t.order_id ASC
+LIMIT 10;
+
+-- Q 92. How can you sample every 4th row from a transactions table ordered by date?
+USE northwind;
+WITH ordered AS (
+    SELECT
+        id,
+        customer_id,
+        DATE_FORMAT(order_date, '%d-%m-%y') AS orders_date,
+        ROW_NUMBER() OVER (ORDER BY order_date) AS rn
+    FROM orders
+)
+SELECT id, customer_id, orders_date, rn
+FROM ordered
+WHERE rn % 4 = 0;   -- every 4th row
+
+-- Q 93. What percent of search queries had only low-rated results (ratings < 3)?
+USE blinkit;
+WITH per_query AS (
+    SELECT
+        order_id,
+        MAX(rating) AS max_rating
+    FROM blinkit_customer_feedback
+    GROUP BY order_id
+),
+flagged AS (
+    SELECT
+        COUNT(*) AS all_below_3_queries
+    FROM per_query
+    WHERE max_rating < 3
+)
+SELECT
+    all_below_3_queries,
+    (SELECT COUNT(DISTINCT order_id) FROM blinkit_customer_feedback) AS total_queries,
+    all_below_3_queries * 100.0
+        / (SELECT COUNT(DISTINCT order_id) FROM blinkit_customer_feedback) AS proportion_below_3
+FROM flagged;
+
+-- Q 97. What was each user’s third purchase based on transaction history?
+USE blinkit;
+WITH Purchase_count AS (
+    SELECT 
+        customer_id, 
+        blinkit_order_items.product_id, 
+        blinkit_products.product_name, 
+        ROW_NUMBER() OVER(
+            PARTITION BY customer_id 
+            ORDER BY order_date
+        ) AS Transaction_history_no
+    FROM blinkit_orders 
+    JOIN blinkit_order_items 
+        ON blinkit_orders.order_id = blinkit_order_items.order_id
+    JOIN blinkit_products 
+        ON blinkit_order_items.product_id = blinkit_products.product_id
+)
+SELECT 
+    customer_id, 
+    product_id, 
+    product_name, 
+    CASE 
+        WHEN Transaction_history_no = 1 THEN 'First_transaction'
+        WHEN Transaction_history_no = 2 THEN 'Second_transaction'
+        WHEN Transaction_history_no = 3 THEN 'Third_transaction'
+        ELSE 'Regular_Purchases'
+    END AS Purchase_category
+FROM Purchase_count 
+WHERE Transaction_history_no = 3;
+
+-- Q 100. What are the top 3 highest employee salaries by department?
+WITH aggregate_data AS (
+    SELECT 
+        department, 
+        employee_id, 
+        CONCAT(first_name, "_", last_name) AS Emp_name, 
+        salary, 
+        DENSE_RANK() OVER(
+            PARTITION BY department 
+            ORDER BY salary DESC
+        ) AS Salary_rank 
+    FROM employees
+)
+SELECT * FROM aggregate_data 
+WHERE Salary_rank <= 3;
 
 -- Q 107. What is the 3-day weighted moving average of product sales?
 USE time_series_data;
